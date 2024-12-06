@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    printf("User joined the chat");
+    printf("User joined the chat\n");
 
     return 0;
 }
