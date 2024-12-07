@@ -1,15 +1,8 @@
 #include "common.h"
 
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    /* 2 parameters should be sent via terminal */
-    if (argc < 2)
-    {
-        perror("Not enough parameters!");
-        exit(1);
-    }
-
     /* create a socket for the server */
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
@@ -45,6 +38,20 @@ int main(int argc, char *argv[])
     }
 
     printf("User joined the chat\n");
+
+    char message[1024];
+    do
+    {
+        int bytes_recieved = recv(client_socket, message, sizeof(message) - 1, 0);
+        if (bytes_recieved > 0)
+        {
+            printf("%s", message);
+        }
+    } while (strcmp(message, "exit\n") != 0);
+    
+
+    /* Close the socket */
+    close(server_socket);
 
     return 0;
 }
