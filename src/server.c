@@ -1,5 +1,11 @@
 #include "common.h"
 
+#define MAX_CLIENTS 2
+
+void *handle_client(void *server_socket_ptr);
+
+int number_of_clients = 0;
+
 
 int main(void)
 {
@@ -22,11 +28,39 @@ int main(void)
     }
 
     /* listen for other sockets */
-    if (listen(server_socket, 2) < 0) { // Allow up to 2 pending connections
+    if (listen(server_socket, MAX_CLIENTS) < 0) {
         perror("Listen failed");
         exit(1);
     }
 
+    int client_index;
+    for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
+    {
+        pthread_t thread_id;
+        pthread_create(&thread_id, NULL, handle_client, &server_socket);
+        pthread_detach(thread_id);
+    }
+
+    while (number_of_clients == 0)
+    {
+        /* wait for connection with first client */
+    }
+
+    while (number_of_clients != 0)
+    {
+        /* do nothing, don't terminate the program */
+    }
+
+    /* Close the socket */
+    close(server_socket);
+
+    return 0;
+}
+
+
+void *handle_client(void *server_socket_ptr)
+{
+    int server_socket = *(int *) server_socket_ptr;
     /* accept other connection */
     struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
@@ -36,6 +70,8 @@ int main(void)
         perror("Accept failed");
         exit(1);
     }
+    
+    number_of_clients++;
 
     printf("User joined the chat\n");
 
@@ -48,10 +84,9 @@ int main(void)
             printf("%s", message);
         }
     } while (strcmp(message, "exit\n") != 0);
-    
 
-    /* Close the socket */
-    close(server_socket);
+    close(client_socket);
+    number_of_clients--;
 
-    return 0;
+    return NULL;
 }
