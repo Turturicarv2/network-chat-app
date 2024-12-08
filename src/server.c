@@ -7,10 +7,10 @@
 
 /* FUNCTION DECLARATIONS */
 void *handle_client(void *args);
-void create_thread(int client_index);
+void create_thread(uint8_t client_index);
 
 /* GLOBAL VARIABLES */
-int number_of_clients = 0;
+uint8_t number_of_clients = 0;
 int server_socket;
 int client_arr[MAX_CLIENTS];
 
@@ -41,7 +41,8 @@ int main(void)
         exit(1);
     }
 
-    int client_index;
+    /* create a thread for each user that can join the chat */
+    uint8_t client_index;
     for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
     {
         create_thread(client_index);
@@ -54,6 +55,8 @@ int main(void)
 
     while (number_of_clients != 0)
     {
+        /* when a user leaves the chat, the thread terminates.
+        create a new thread when that happens */
         int client_index;
         for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
         {
@@ -64,7 +67,7 @@ int main(void)
         }
     }
 
-    /* Close the socket */
+    /* Close the server */
     close(server_socket);
 
     return 0;
@@ -87,7 +90,8 @@ void *handle_client(void *args)
         exit(1);
     }
     
-    int client_index;
+    /* update client global variables */
+    uint8_t client_index;
     for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
     {
         if (client_arr[client_index] == WAITING_CLIENT)
@@ -101,6 +105,7 @@ void *handle_client(void *args)
 
     printf("User joined the chat\n");
 
+    /* wait for message from the client */
     char message[1024];
     do
     {
@@ -111,6 +116,7 @@ void *handle_client(void *args)
         }
     } while (strcmp(message, "exit\n") != 0);
 
+    /* close connection and update global vars */
     close(client_socket);
     number_of_clients--;
     client_arr[client_index] = NO_CLIENT;
@@ -119,7 +125,11 @@ void *handle_client(void *args)
 }
 
 
-void create_thread(int client_index)
+/*
+Function that creates a basic thread.
+Returns nothing
+*/
+void create_thread(uint8_t client_index)
 {
     client_arr[client_index] = WAITING_CLIENT;
 
