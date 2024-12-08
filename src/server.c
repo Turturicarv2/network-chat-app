@@ -1,16 +1,24 @@
 #include "common.h"
 
+/* DEFINES */
 #define MAX_CLIENTS 2
+#define NO_CLIENT -2
+#define WAITING_CLIENT -1
 
-void *handle_client(void *server_socket_ptr);
+/* FUNCTION DECLARATIONS */
+void *handle_client(void *args);
+void create_thread(int client_index);
 
+/* GLOBAL VARIABLES */
 int number_of_clients = 0;
+int server_socket;
+int client_arr[MAX_CLIENTS];
 
 
 int main(void)
 {
     /* create a socket for the server */
-    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         perror("Socket creation failed");
         exit(1);
@@ -36,9 +44,7 @@ int main(void)
     int client_index;
     for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
     {
-        pthread_t thread_id;
-        pthread_create(&thread_id, NULL, handle_client, &server_socket);
-        pthread_detach(thread_id);
+        create_thread(client_index);
     }
 
     while (number_of_clients == 0)
@@ -48,7 +54,14 @@ int main(void)
 
     while (number_of_clients != 0)
     {
-        /* do nothing, don't terminate the program */
+        int client_index;
+        for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
+        {
+            if (client_arr[client_index] == NO_CLIENT)
+            {
+                create_thread(client_index);
+            }
+        }
     }
 
     /* Close the socket */
@@ -58,10 +71,13 @@ int main(void)
 }
 
 
-void *handle_client(void *server_socket_ptr)
+/*
+Function that handles 1 client/user. Called by each thread.
+Returns nothing
+*/
+void *handle_client(void *args)
 {
-    int server_socket = *(int *) server_socket_ptr;
-    /* accept other connection */
+    /* accept client connection */
     struct sockaddr_in client_address;
     socklen_t client_len = sizeof(client_address);
 
@@ -71,6 +87,16 @@ void *handle_client(void *server_socket_ptr)
         exit(1);
     }
     
+    int client_index;
+    for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
+    {
+        if (client_arr[client_index] == WAITING_CLIENT)
+        {
+            break;
+        }
+    }
+
+    client_arr[client_index] = client_socket;
     number_of_clients++;
 
     printf("User joined the chat\n");
@@ -87,6 +113,17 @@ void *handle_client(void *server_socket_ptr)
 
     close(client_socket);
     number_of_clients--;
+    client_arr[client_index] = NO_CLIENT;
 
     return NULL;
+}
+
+
+void create_thread(int client_index)
+{
+    client_arr[client_index] = WAITING_CLIENT;
+
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, handle_client, NULL);
+    pthread_detach(thread_id);
 }
