@@ -6,8 +6,8 @@
 #define WAITING_CLIENT -1
 
 /* FUNCTION DECLARATIONS */
-void *handle_client(void *args);
-void create_thread(uint8_t client_index);
+static void *handle_client(void *args);
+static void create_thread(uint8_t client_index);
 
 /* GLOBAL VARIABLES */
 uint8_t number_of_clients = 0;
@@ -78,7 +78,7 @@ int main(void)
 Function that handles 1 client/user. Called by each thread.
 Returns nothing
 */
-void *handle_client(void *args)
+static void *handle_client(void *args)
 {
     /* accept client connection */
     struct sockaddr_in client_address;
@@ -112,7 +112,22 @@ void *handle_client(void *args)
         int bytes_recieved = recv(client_socket, message, sizeof(message) - 1, 0);
         if (bytes_recieved > 0)
         {
+            /* if user leaves the chat, send corresponding message */
+            if (strcmp(message, "exit\n") == 0)
+            {
+                strcpy(message, "User has left the chat\n");
+            }
             printf("%s", message);
+            
+            for (client_index = 0; client_index < MAX_CLIENTS; client_index++)
+            {
+                if ((client_arr[client_index] != client_socket)
+                        && (client_arr[client_index] != NO_CLIENT)
+                        && (client_arr[client_index] != WAITING_CLIENT))
+                {
+                    send(client_arr[client_index], message, sizeof(message) - 1, 0);
+                }
+            }
         }
     } while (strcmp(message, "exit\n") != 0);
 
@@ -129,7 +144,7 @@ void *handle_client(void *args)
 Function that creates a basic thread.
 Returns nothing
 */
-void create_thread(uint8_t client_index)
+static void create_thread(uint8_t client_index)
 {
     client_arr[client_index] = WAITING_CLIENT;
 

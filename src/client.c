@@ -1,12 +1,14 @@
 #include "common.h"
 
-char *get_user_input(void);
+static char *get_user_input(void);
+static void *handle_receiving_messages(void *args);
 
+int client_socket;
 
 int main(void)
 {
     /* create a socket for the client */
-    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0) {
         perror("Socket creation failed");
         exit(1);
@@ -29,8 +31,17 @@ int main(void)
 
     printf("Connected to the server!\n");
 
+    /* create a thread that waits for messages from server */
+    pthread_t receiving_thread;
+    if (pthread_create(&receiving_thread, NULL, handle_receiving_messages, NULL) != 0)
+    {
+        perror("Failed to create thread");
+        return 1;
+    }
+
     char message[1024];
 
+    /* get input from current user and send to server */
     do
     {
         /* get message from the client */
@@ -39,6 +50,18 @@ int main(void)
         /* send message */
         send(client_socket, message, sizeof(message) - 1, 0);
     } while (strcmp(message, "exit\n") != 0);
+
+    // Cancel the thread that waits for messages
+    if (pthread_cancel(receiving_thread) != 0) {
+        perror("Failed to cancel thread");
+        return 1;
+    }
+
+    // Wait for the thread to terminate
+    if (pthread_join(receiving_thread, NULL) != 0) {
+        perror("Failed to join thread");
+        return 1;
+    }
 
     // Close the socket
     close(client_socket);
@@ -51,7 +74,7 @@ int main(void)
 Function that reads user input
 Returns a string
 */
-char *get_user_input(void) {
+static char *get_user_input(void) {
     char *buffer;
     size_t bufsize = 32;
     size_t number_of_characters;
@@ -68,4 +91,22 @@ char *get_user_input(void) {
     number_of_characters = getline(&buffer, &bufsize, stdin);
 
     return buffer;
+}
+
+
+/* 
+Function that will print messages from other clients
+Returns nothing
+*/
+static void *handle_receiving_messages(void *args)
+{
+    while (1)
+    {
+        char message[1024];
+        int bytes_recieved = recv(client_socket, message, sizeof(message) - 1, 0);
+        if (bytes_recieved > 0)
+        {
+            printf("%s", message);
+        }
+    }
 }
