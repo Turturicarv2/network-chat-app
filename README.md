@@ -23,15 +23,18 @@ The server supports up to 2 simultaneous clients by default, but this can be mod
 git clone https://github.com/yourusername/tcp-chat-app.git
 cd tcp-chat-app
 ```
+
 2. **Build the Application: Use the provided Makefile to compile both the server and client**:
 ```
 make
 ```
 This will generate `server` and `client` binaries in the `build` directory.
+
 3. **Run the Server: Start the server to listen for client connections**:
 ```
 ./build/server
 ```
+
 4. **Run the Client(s): Start one or more clients to connect to the server**:
 ```
 ./build/client
