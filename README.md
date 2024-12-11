@@ -20,8 +20,8 @@ The server supports up to 2 simultaneous clients by default, but this can be mod
 ### Setting Up
 1. **Clone the Repository**:
 ```
-git clone https://github.com/yourusername/tcp-chat-app.git
-cd tcp-chat-app
+git clone https://github.com/Turturicarv2/network-chat-app.git
+cd network-chat-app
 ```
 
 2. **Build the Application: Use the provided Makefile to compile both the server and client**:
