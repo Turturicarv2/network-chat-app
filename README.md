@@ -40,7 +40,7 @@ This will generate `server` and `client` binaries in the `build` directory.
 ### Usage
 - Once a client connects, they can start sending messages to the server.
 - Messages are relayed to all connected clients.
-- To leave the chat, type exit and press Enter.
+- To leave the chat, type `exit` and press Enter.
 
 ### Cleanup
 To remove the built binaries, use:
